@@ -1,0 +1,6 @@
+# ignore vim artifacts
+*~
+
+# ignore the development git repo which contained hardcoded credentials
+.git-orig/*
+
