@@ -52,7 +52,7 @@ add_action('woo_mws_sync_data', 'woo_mws_do_data_sync');
 function woo_mws_do_data_sync() {
 
   // helps debug
-  echo "<pre>";
+  $debug = "";
 
   // include MWS PHP API
   require_once '.config.inc.php'; 
@@ -97,18 +97,18 @@ function woo_mws_do_data_sync() {
     foreach ($new_mws_inventory as $sku => $quantity) {
       if($old_mws_inventory[$sku] != $quantity) {
         // quantity has changed for this item
-        // we assume it's a purchase
-        // print_r("Change for $sku: {$old_mws_inventory[$sku]} -> $quantity\n"); 
+        // we assume it's a purchase because we never add stock through amazon
 
         // how much the inventory has changed 
         $change = intval( $quantity ) - intval( $old_mws_inventory[$sku] );
+        $debug .= "Change detected from Amazon for SKU $sku: $change \n"; 
 
         // only accept negative change for purchases
         if( 0 > $change) {
           if($product = _woocommerce_get_product_by_sku($sku)) {
             // update value
             $product->set_stock( $woocommerce_inventory[$sku] + $change );
-            print_r("Decreased product $sku by $change \n");
+            $debug .= "Decreased product $sku by $change \n";
           }
         } else {
           // HOW DID THIS HAPPEN??
@@ -117,32 +117,43 @@ function woo_mws_do_data_sync() {
       }
     }
 
+    // update mws with woocommerce stocks
+    $woocommerce_inventory = _get_woocommerce_inventory( array_keys( $new_mws_inventory ) );
+
+    // this updates the stock from $woocommerce_inventory
+    $new_mws_inventory = array_merge( $new_mws_inventory, $woocommerce_inventory ); 
+
+    // only send the changed values
+    $mws_inventory_changed = array_diff_assoc($new_mws_inventory, $old_mws_inventory);
+
+    if( !empty( $mws_inventory_changed ) ) {
+      // sync the inventories
+      $debug .= "Updating Amazon inventory with current Woocommerce state...\n";
+      _update_amazon_inventory( $mws_inventory_changed, $debug );
+      $debug .= print_r($mws_inventory_changed, true) . "\n";
+    }
+
+    //print_r($new_mws_inventory);
+
+    // save latest inventory to DB for comparison
+    update_option( 'amazon_inventory', $new_mws_inventory );
+    update_option( 'amazon_inventory_id', _get_newest_report_id() );
+
   } 
 
   else {
-    print_r("WARNING: MWS report ID hasn't changed from last time. Local inventory not updated\n"); 
+    $debug .= "WARNING: MWS report ID hasn't changed from last time. Aborting sync. Maybe MWS API is being slow or you're running the script too often?\n";
   }
 
-  // update mws with woocommerce stocks
-  $woocommerce_inventory = _get_woocommerce_inventory( array_keys( $new_mws_inventory ) );
-  $new_mws_inventory = array_merge( $new_mws_inventory, $woocommerce_inventory ); 
-
-  // sync the inventories
-  print_r("Updating Amazon inventory with current Woocommerce state...\n");
-  _update_amazon_inventory( $woocommerce_inventory );
-
-  //print_r($new_mws_inventory);
-
-  // save latest inventory to DB for comparison
-  update_option( 'amazon_inventory', $new_mws_inventory );
-  update_option( 'amazon_inventory_id', _get_newest_report_id() );
-
-  
-  echo "</pre>";
+  // send debug mail
+  if (!empty($debug)) 
+    wp_mail('antti@seravo.fi', 'MWS Integration Debug', $debug);
 
   // kill execution if called from ?do_sync
-  if(isset($_GET['do_sync']))
+  if(isset($_GET['do_sync'])) {
+    echo "<h1>MWS Integration Debug:</h1><pre>$debug</pre>";
     die();
+  }
 }
 
 function _get_woocommerce_inventory( $skus ) {
@@ -156,7 +167,7 @@ function _get_woocommerce_inventory( $skus ) {
       $woocommerce_inventory[$sku] = $product->get_stock_quantity();
     }
     else {
-      print_r( "Notice: Product $sku found in Amazon but not in Woocommerce\n" ); 
+      //print_r( "Notice: Product $sku found in Amazon but not in Woocommerce\n" ); 
     }
   }
   return $woocommerce_inventory;
@@ -240,8 +251,7 @@ function _update_amazon_inventory($inventory) {
 
   $counter = 0;
 
-  ob_start(); 
-?><?xml version="1.0" encoding="UTF-8"?>
+  ob_start(); ?><?xml version="1.0" encoding="UTF-8"?>
 <AmazonEnvelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="amzn-envelope.xsd">
   <Header>
     <DocumentVersion>1.01</DocumentVersion>
@@ -262,8 +272,6 @@ function _update_amazon_inventory($inventory) {
 <?php 
 
   $feed = ob_get_clean();
-
-  print_r($feed);
 
   $feedHandle = @fopen('php://memory', 'rw+');
   fwrite($feedHandle, $feed);
