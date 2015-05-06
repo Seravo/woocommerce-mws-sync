@@ -16,11 +16,10 @@ Amazon seller account using the MWS API.
 This plugin automatically syncronises the inventory between a WooCommerce 
 instance and an Amazon seller account using the MWS API.
 
-Important!
+Product inventories are syncronised based purely on their SKU values. 
 
-Product inventories are syncronised based purely on their SKU values. Adding
-inventory from the Amazon store is not currently supported, please refill
-inventory via your WooCommerce shop insted.
+Adding inventory from the Amazon store is not currently supported, please 
+refill shop inventory via your WooCommerce shop instead.
 
 API documentation:
 https://developer.amazonservices.com/gp/mws/api.html
@@ -45,9 +44,13 @@ define('MERCHANT_IDENTIFIER', 'XXXXXXXX');
 define('SERVICE_URL' = 'https://mws.amazonservices.com');
 ```
 
-3. Make sure the products you want to sync have the exact same SKU values in 
-WooCommerce and the Amazon Seller Central. Make sure the products to be synced 
-have an inventory value of 0 at Amazon.
+3. Prepare your products on Amazon Seller Central
+
+Make sure the products to be synced have an initial inventory value of 0 at Amazon.
+
+Make sure the products you want to sync have the exact same SKU values in 
+WooCommerce and the Amazon Seller Central. Also, make sure SKU names don't
+clash for any products you don't want to syncronise vai this plugin.
 
 4. Installation done! The first sync should 
 
