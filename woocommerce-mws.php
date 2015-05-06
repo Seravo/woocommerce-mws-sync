@@ -83,36 +83,46 @@ function woo_mws_do_data_sync() {
   );
 
 
-  // get inventory from amazon
-  $new_mws_inventory = _get_amazon_inventory();
-  $old_mws_inventory = get_option('amazon_inventory');
+  // get newest report ID
+  $mws_report_id = _get_newest_report_id();
 
   // we only want to update local stock values if the inventory has updated
-  if(get_option('amazon_inventory_id') && _get_newest_report_id() != get_option('amazon_inventory_id')) {
+  if(get_option('amazon_inventory_id') && $mws_report_id != get_option('amazon_inventory_id')) {
+
+    // get inventory from amazon
+    $new_mws_inventory = _get_amazon_inventory();
+    $old_mws_inventory = get_option('amazon_inventory');
 
     // get woocommerce inventory for corresponding skus
     $woocommerce_inventory = _get_woocommerce_inventory( array_keys( $new_mws_inventory ) );
-    
+
+    // only handle the products found in woocommerce
+    $new_mws_inventory = array_intersect_key($new_mws_inventory, $woocommerce_inventory);
+
     // update woocommerce inventory with the diff from two previous amazon inventories
     foreach ($new_mws_inventory as $sku => $quantity) {
-      if($old_mws_inventory[$sku] != $quantity) {
+
+      $amazon = intval( $quantity );
+      $shop = intval( $old_mws_inventory[$sku] );
+
+      // how much the inventory has changed 
+      $change = $amazon - $shop;
+
+      if($change != 0) {
         // quantity has changed for this item
         // we assume it's a purchase because we never add stock through amazon
-
-        // how much the inventory has changed 
-        $change = intval( $quantity ) - intval( $old_mws_inventory[$sku] );
-        $debug .= "Change detected from Amazon for SKU $sku: $change \n"; 
+        $debug .= "Discrepancy detected for SKU $sku. Shop qty: $shop, Amazon qty: $amazon, Change: $change\n"; 
 
         // only accept negative change for purchases
         if( 0 > $change) {
           if($product = _woocommerce_get_product_by_sku($sku)) {
             // update value
             $product->set_stock( $woocommerce_inventory[$sku] + $change );
-            $debug .= "Decreased product $sku by $change \n";
+            $debug .= "Decreased local stock for product $sku by " . (-$change) . "\n";
           }
-        } else {
+        } else if ( 0 < $change) {
           // HOW DID THIS HAPPEN??
-          error_log('WARNING: AMAZON STOCK HAS INCREASED UNEXPECTEDLY');
+          $debug .= "WARNING: Amazon stock was increased unexpectedly for SKU $sku\n";
         }
       }
     }
@@ -125,24 +135,32 @@ function woo_mws_do_data_sync() {
 
     // only send the changed values
     $mws_inventory_changed = array_diff_assoc($new_mws_inventory, $old_mws_inventory);
+    //$mws_inventory_changed = $new_mws_inventory;
 
     if( !empty( $mws_inventory_changed ) ) {
       // sync the inventories
       $debug .= "Updating Amazon inventory with current Woocommerce state...\n";
-      _update_amazon_inventory( $mws_inventory_changed, $debug );
-      $debug .= print_r($mws_inventory_changed, true) . "\n";
+      $update = _update_amazon_inventory( $mws_inventory_changed, $debug );
+      if($update) {
+        $debug .= print_r($mws_inventory_changed, true) . "\n";
+        $debug .= "Update ID: $update";
+      }
+      else {
+        $debug .= "ERROR: MWS update failed!";
+      }
     }
 
     //print_r($new_mws_inventory);
 
     // save latest inventory to DB for comparison
     update_option( 'amazon_inventory', $new_mws_inventory );
-    update_option( 'amazon_inventory_id', _get_newest_report_id() );
+    update_option( 'amazon_inventory_id', $mws_report_id );
 
   } 
 
   else {
     $debug .= "WARNING: MWS report ID hasn't changed from last time. Aborting sync. Maybe MWS API is being slow or you're running the script too often?\n";
+    $debug .= "MWS Report ID: $mws_report_id"; 
   }
 
   // send debug mail
@@ -164,7 +182,7 @@ function _get_woocommerce_inventory( $skus ) {
   foreach ($skus as $sku) {
     $product = _woocommerce_get_product_by_sku( $sku );  
     if( $product ) {
-      $woocommerce_inventory[$sku] = $product->get_stock_quantity();
+      $woocommerce_inventory[$sku] = intval( $product->get_stock_quantity() );
     }
     else {
       //print_r( "Notice: Product $sku found in Amazon but not in Woocommerce\n" ); 
@@ -181,7 +199,7 @@ function _get_amazon_inventory() {
 function _get_newest_report_id() {
 
   global $service;
-  static $report_id; // this doesn't change during request
+  static $report_id; // this doesn't change during request so we memoize it
 
   // memoize the output of this function
   if(isset($report_id)) {
@@ -236,7 +254,7 @@ function _get_inventory_from_report( $report_id ) {
   $report = array();
   foreach ($rows as $row) {
      $cols = explode("\t", $row); 
-     $report[$cols[0]] = $cols[3];
+     $report[$cols[0]] = intval( $cols[3] );
   }
 
   return $report;
