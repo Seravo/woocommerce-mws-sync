@@ -12,7 +12,7 @@
 
 
 /**
- * Copyright 2014 Seravo Oy
+ * Copyright 2015 Seravo Oy
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3, as
@@ -28,19 +28,25 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+
 /*
  * Schedule the sync action to be done every 15 mins via WP-Cron
  */
 add_action( 'init', 'woo_mws_setup_schedule' );
 function woo_mws_setup_schedule() {
   //wp_clear_scheduled_hook ( 'woo_mws_sync_data' );
-  if ( !wp_next_scheduled( 'woo_mws_sync_data' ) ) {
+  if ( defined('AWS_ACCESS_KEY_ID') && !wp_next_scheduled( 'woo_mws_sync_data' ) ) {
+    // schedule sync for every 15 minutes
     wp_schedule_event( time(), '*/15', 'woo_mws_sync_data');
+
+    // also set up scheduled inventory reports on mws
+    woo_mws_schedule_reports();
   }
 }
 
+
 /*
- * Define Once 30 mins interval
+ * Define Once 15 mins interval
  */
 add_filter('cron_schedules', 'new_interval');
 function new_interval($interval) {
@@ -167,7 +173,7 @@ function woo_mws_do_data_sync() {
     wp_mail('antti@seravo.fi', 'MWS Integration Debug', $debug);
 
   // kill execution if called from ?do_sync
-  if(isset($_GET['do_sync'])) {
+  if(isset($_GET['mws_do_sync'])) {
     echo "<h1>MWS Integration Debug:</h1><pre>$debug</pre>";
     die();
   }
@@ -339,7 +345,52 @@ function _woocommerce_get_product_by_sku( $sku ) {
 /*
  * Run sync via GET parameters
  */
-if(isset($_GET['do_sync'])) {
+if(isset($_GET['mws_do_sync'])) {
   add_action('init', 'woo_mws_do_data_sync');
-  
 }
+
+
+/*
+ * Set up scheduled inventory reports on MWS
+ */
+function woo_mws_schedule_reports() {
+
+  // include MWS PHP API
+  require_once '.config.inc.php'; 
+  require_once 'api/src/MarketplaceWebService/Client.php';
+  require_once 'api/src/MarketplaceWebService/Model.php';
+  require_once 'api/src/MarketplaceWebService/Model/ManageReportScheduleRequest.php';
+
+  // define API Client
+  global $service;
+
+  $service = new MarketplaceWebService_Client(
+    AWS_ACCESS_KEY_ID,
+    AWS_SECRET_ACCESS_KEY,
+    array(
+     'ServiceURL' => $serviceUrl,
+     'ProxyHost' => null,
+     'ProxyPort' => -1,
+     'MaxErrorRetry' => 3,
+    ),
+    APPLICATION_NAME,
+    APPLICATION_VERSION
+  );
+
+  $request = new MarketplaceWebService_Model_ManageReportScheduleRequest();
+
+  $request->setMerchant(MERCHANT_ID);
+  $request->setReportType('_GET_FLAT_FILE_OPEN_LISTINGS_DATA_');
+  $request->setSchedule('_15_MINUTES_'); // lowest value mws allows
+  $request->setScheduleDate(new DateTime('now', new DateTimeZone('UTC')));
+
+  $response = $service->manageReportSchedule($request);
+
+  return $response->isSetManageReportScheduleResult();
+}
+
+if(isset($_GET['mws_schedule'])) {
+  echo woo_mws_schedule_reports() ? 'Schedule successful!' : 'Schedule failed. Check your auth credentials.';
+  die();
+}
+
