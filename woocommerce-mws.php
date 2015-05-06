@@ -33,7 +33,7 @@
  */
 add_action( 'init', 'woo_mws_setup_schedule' );
 function woo_mws_setup_schedule() {
-  // wp_clear_scheduled_hook ( 'woo_mws_sync_data' );
+  //wp_clear_scheduled_hook ( 'woo_mws_sync_data' );
   if ( !wp_next_scheduled( 'woo_mws_sync_data' ) ) {
     wp_schedule_event( time(), '*/15', 'woo_mws_sync_data');
   }
@@ -128,13 +128,11 @@ function woo_mws_do_data_sync() {
     }
 
     // update mws with woocommerce stocks
-    $woocommerce_inventory = _get_woocommerce_inventory( array_keys( $new_mws_inventory ) );
-
-    // this updates the stock from $woocommerce_inventory
-    $new_mws_inventory = array_merge( $new_mws_inventory, $woocommerce_inventory ); 
+    $new_mws_inventory = _get_woocommerce_inventory( array_keys( $new_mws_inventory ) );
 
     // only send the changed values
     $mws_inventory_changed = array_diff_assoc($new_mws_inventory, $old_mws_inventory);
+    //$debug .= print_r($new_mws_inventory_changed, true) . "\n";
     //$mws_inventory_changed = $new_mws_inventory;
 
     if( !empty( $mws_inventory_changed ) ) {
@@ -156,11 +154,12 @@ function woo_mws_do_data_sync() {
     update_option( 'amazon_inventory', $new_mws_inventory );
     update_option( 'amazon_inventory_id', $mws_report_id );
 
+
   } 
 
   else {
-    $debug .= "WARNING: MWS report ID hasn't changed from last time. Aborting sync. Maybe MWS API is being slow or you're running the script too often?\n";
-    $debug .= "MWS Report ID: $mws_report_id"; 
+    echo "WARNING: MWS report ID hasn't changed from last time. Aborting sync. Maybe MWS API is being slow or you're running the script too often?\n";
+    echo "MWS Report ID: $mws_report_id"; 
   }
 
   // send debug mail
@@ -182,7 +181,9 @@ function _get_woocommerce_inventory( $skus ) {
   foreach ($skus as $sku) {
     $product = _woocommerce_get_product_by_sku( $sku );  
     if( $product ) {
-      $woocommerce_inventory[$sku] = intval( $product->get_stock_quantity() );
+      $sku = strval( $sku );
+      $inventory = intval( $product->get_stock_quantity() );
+      $woocommerce_inventory[$sku] = $inventory;
     }
     else {
       //print_r( "Notice: Product $sku found in Amazon but not in Woocommerce\n" ); 
@@ -254,7 +255,9 @@ function _get_inventory_from_report( $report_id ) {
   $report = array();
   foreach ($rows as $row) {
      $cols = explode("\t", $row); 
-     $report[$cols[0]] = intval( $cols[3] );
+     $sku = strval( $cols[0] );
+     $inventory = intval( $cols[3] );
+     $report[$sku] = $inventory;
   }
 
   return $report;
