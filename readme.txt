@@ -52,7 +52,8 @@ Make sure the products you want to sync have the exact same SKU values in
 WooCommerce and the Amazon Seller Central. Also, make sure SKU names don't
 clash for any products you don't want to syncronise vai this plugin.
 
-4. Installation done! The first sync should 
+4. Installation done! The first sync should happen within the first 30
+minutes, as MWS generates the first inventory report.
 
 == Frequently Asked Questions ==
 
