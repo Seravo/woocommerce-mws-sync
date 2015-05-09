@@ -1,24 +1,24 @@
 === Woocommerce MWS Sync ===
-Contributors: Zuige
-Tags: woocommerce, mws, sync
+Contributors: Zuige, ottok
+Tags: woocommerce, mws, sync, amazon, integration, ecommerce, sku
 Donate link: http://seravo.fi/
 Requires at least: 4.0.1
 Tested up to: 4.2.1
-Stable tag: 1.0 
+Stable tag: 1.0
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
-This plugin syncronises the inventory between a WooCommerce instance and an 
+This plugin syncronises the inventory between a WooCommerce instance and an
 Amazon seller account using the MWS API.
 
 == Description ==
 
-This plugin automatically syncronises the inventory between a WooCommerce 
+This plugin automatically syncronises the inventory between a WooCommerce
 instance and an Amazon seller account using the MWS API.
 
-Product inventories are syncronised based purely on their SKU values. 
+Product inventories are syncronised based purely on their SKU values.
 
-Adding inventory from the Amazon store is not currently supported, please 
+Adding inventory from the Amazon store is not currently supported, please
 refill shop inventory via your WooCommerce shop instead.
 
 API documentation:
@@ -26,6 +26,9 @@ https://developer.amazonservices.com/gp/mws/api.html
 
 MWS Scratchpad:
 https://mws.amazonservices.com/scratchpad/index.html
+
+Plugin maintained at https://github.com/Seravo/woocommerce-mws
+Pull requests welcomed!
 
 == Installation ==
 
@@ -48,7 +51,7 @@ define('SERVICE_URL' = 'https://mws.amazonservices.com');
 
 Make sure the products to be synced have an initial inventory value of 0 at Amazon.
 
-Make sure the products you want to sync have the exact same SKU values in 
+Make sure the products you want to sync have the exact same SKU values in
 WooCommerce and the Amazon Seller Central. Also, make sure SKU names don't
 clash for any products you don't want to syncronise vai this plugin.
 
@@ -59,7 +62,7 @@ minutes, as MWS generates the first inventory report.
 
 No FAQ section yet.
 
-== Screenshots == 
+== Screenshots ==
 
 No screenshots yet.
 

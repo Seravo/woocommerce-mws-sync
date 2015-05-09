@@ -5,7 +5,7 @@
  */
 
 // API source location
-set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__) . '/api/src');    
+set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__) . '/api/src');
 
 // AWS API Key
 //define('AWS_ACCESS_KEY_ID', 'XXXXXXXX');
@@ -18,6 +18,9 @@ set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__) . '/api
 
 // We want the US API
 //define('SERVICE_URL' = 'https://mws.amazonservices.com');
+
+// Email to get debug mail
+//define('DEBUG_EMAIL' = 'admin@example.com');
 
 $serviceUrl = SERVICE_URL;
 

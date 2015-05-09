@@ -1,9 +1,8 @@
 <?php
-
 /**
  * Plugin Name: WooCommerce MWS sync
- * Plugin URI: 
- * Description: This plugin syncs product inventories between Woocommerce and Amazon 
+ * Plugin URI: https://github.com/Seravo/woocommerce-mws
+ * Description: This plugin syncs product inventories between Woocommerce and Amazon
  * Version: 1.0
  * Author: Seravo Oy
  * Author URI: http://seravo.fi
@@ -61,7 +60,7 @@ function woo_mws_do_data_sync() {
   $debug = "";
 
   // include MWS PHP API
-  require_once '.config.inc.php'; 
+  require_once '.config.inc.php';
   require_once 'api/src/MarketplaceWebService/Client.php';
   require_once 'api/src/MarketplaceWebService/Model.php';
   require_once 'api/src/MarketplaceWebService/Model/GetReportListRequest.php';
@@ -74,14 +73,14 @@ function woo_mws_do_data_sync() {
 
   // define API Client
   global $service;
-  
+
   $service = new MarketplaceWebService_Client(
-    AWS_ACCESS_KEY_ID, 
-    AWS_SECRET_ACCESS_KEY, 
+    AWS_ACCESS_KEY_ID,
+    AWS_SECRET_ACCESS_KEY,
     array(
       'ServiceURL' => $serviceUrl,
       'ProxyHost' => null,
-      'ProxyPort' => -1, 
+      'ProxyPort' => -1,
       'MaxErrorRetry' => 3,
     ),
     APPLICATION_NAME,
@@ -111,13 +110,13 @@ function woo_mws_do_data_sync() {
       $amazon = intval( $quantity );
       $shop = intval( $old_mws_inventory[$sku] );
 
-      // how much the inventory has changed 
+      // how much the inventory has changed
       $change = $amazon - $shop;
 
       if($change != 0) {
         // quantity has changed for this item
         // we assume it's a purchase because we never add stock through amazon
-        $debug .= "Discrepancy detected for SKU $sku. Shop qty: $shop, Amazon qty: $amazon, Change: $change\n"; 
+        $debug .= "Discrepancy detected for SKU $sku. Shop qty: $shop, Amazon qty: $amazon, Change: $change\n";
 
         // only accept negative change for purchases
         if( 0 > $change) {
@@ -161,15 +160,15 @@ function woo_mws_do_data_sync() {
     update_option( 'amazon_inventory_id', $mws_report_id );
 
 
-  } 
+  }
 
   else {
     echo "WARNING: MWS report ID hasn't changed from last time. Aborting sync. Maybe MWS API is being slow or you're running the script too often?\n";
-    echo "MWS Report ID: $mws_report_id"; 
+    echo "MWS Report ID: $mws_report_id";
   }
 
   // send debug mail
-  if (!empty($debug)) 
+  if ( defined('DEBUG_EMAIL') && !empty($debug) )
     wp_mail('antti@seravo.fi', 'MWS Integration Debug', $debug);
 
   // kill execution if called from ?do_sync
@@ -180,26 +179,26 @@ function woo_mws_do_data_sync() {
 }
 
 function _get_woocommerce_inventory( $skus ) {
-  
-  // get woocommerce inventory for the corresponding items  
+
+  // get woocommerce inventory for the corresponding items
   $woocommerce_inventory = array();
 
   foreach ($skus as $sku) {
-    $product = _woocommerce_get_product_by_sku( $sku );  
+    $product = _woocommerce_get_product_by_sku( $sku );
     if( $product ) {
       $sku = strval( $sku );
       $inventory = intval( $product->get_stock_quantity() );
       $woocommerce_inventory[$sku] = $inventory;
     }
     else {
-      //print_r( "Notice: Product $sku found in Amazon but not in Woocommerce\n" ); 
+      //print_r( "Notice: Product $sku found in Amazon but not in Woocommerce\n" );
     }
   }
   return $woocommerce_inventory;
 }
 
 function _get_amazon_inventory() {
-  
+
   return _get_inventory_from_report( _get_newest_report_id() );
 }
 
@@ -226,8 +225,8 @@ function _get_newest_report_id() {
   // get response
   $response = $service->getReportList( $request );
 
-  if ($response->isSetGetReportListResult()) { 
-    
+  if ($response->isSetGetReportListResult()) {
+
     $getReportListResult = $response->getGetReportListResult();
     $reportInfoList = $getReportListResult->getReportInfoList();
 
@@ -247,11 +246,11 @@ function _get_inventory_from_report( $report_id ) {
   $request->setMerchant(MERCHANT_ID);
   $request->setReport(@fopen('php://memory', 'rw+'));
   $request->setReportId( $report_id );
-   
+
   $response = $service->getReport($request);
 
   if ($response->isSetGetReportResult())
-    $report = stream_get_contents($request->getReport()); 
+    $report = stream_get_contents($request->getReport());
 
   $rows = explode( "\n", trim($report) );
 
@@ -260,7 +259,7 @@ function _get_inventory_from_report( $report_id ) {
 
   $report = array();
   foreach ($rows as $row) {
-     $cols = explode("\t", $row); 
+     $cols = explode("\t", $row);
      $sku = strval( $cols[0] );
      $inventory = intval( $cols[3] );
      $report[$sku] = $inventory;
@@ -272,8 +271,8 @@ function _get_inventory_from_report( $report_id ) {
 function _update_amazon_inventory($inventory) {
 
   if(empty($inventory))
-    return false; 
-  
+    return false;
+
   global $service;
 
   $counter = 0;
@@ -296,7 +295,7 @@ function _update_amazon_inventory($inventory) {
   </Message>
   <?php endforeach; ?>
 </AmazonEnvelope>
-<?php 
+<?php
 
   $feed = ob_get_clean();
 
@@ -326,7 +325,7 @@ function _update_amazon_inventory($inventory) {
         return $feedSubmissionInfo->getFeedSubmissionId();
       }
     }
-  } 
+  }
 
   return false;
 }
@@ -356,7 +355,7 @@ if(isset($_GET['mws_do_sync'])) {
 function woo_mws_schedule_reports() {
 
   // include MWS PHP API
-  require_once '.config.inc.php'; 
+  require_once '.config.inc.php';
   require_once 'api/src/MarketplaceWebService/Client.php';
   require_once 'api/src/MarketplaceWebService/Model.php';
   require_once 'api/src/MarketplaceWebService/Model/ManageReportScheduleRequest.php';
@@ -393,4 +392,3 @@ if(isset($_GET['mws_schedule'])) {
   echo woo_mws_schedule_reports() ? 'Schedule successful!' : 'Schedule failed. Check your auth credentials.';
   die();
 }
-
