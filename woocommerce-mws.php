@@ -34,7 +34,7 @@
 add_action( 'init', 'woo_mws_setup_schedule' );
 function woo_mws_setup_schedule() {
   //wp_clear_scheduled_hook ( 'woo_mws_sync_data' );
-  if ( defined('AWS_ACCESS_KEY_ID') && !wp_next_scheduled( 'woo_mws_sync_data' ) ) {
+  if ( defined( 'AWS_ACCESS_KEY_ID' ) && ! wp_next_scheduled( 'woo_mws_sync_data' ) ) {
     // schedule sync for every 15 minutes
     wp_schedule_event( time(), '*/15', 'woo_mws_sync_data');
 
@@ -49,7 +49,7 @@ function woo_mws_setup_schedule() {
  */
 add_filter('cron_schedules', 'new_interval');
 function new_interval($interval) {
-    $interval['*/15'] = array('interval' => 15 * 60, 'display' => 'Once 15 minutes');
+    $interval['*/15'] = array( 'interval' => 15 * 60, 'display' => 'Once 15 minutes' );
     return $interval;
 }
 
@@ -57,7 +57,7 @@ add_action('woo_mws_sync_data', 'woo_mws_do_data_sync');
 function woo_mws_do_data_sync() {
 
   // helps debug
-  $debug = "";
+  $debug = '';
 
   // include MWS PHP API
   require_once '.config.inc.php';
@@ -92,7 +92,7 @@ function woo_mws_do_data_sync() {
   $mws_report_id = _get_newest_report_id();
 
   // we only want to update local stock values if the inventory has updated
-  if(get_option('amazon_inventory_id') && $mws_report_id != get_option('amazon_inventory_id')) {
+  if (get_option('amazon_inventory_id') && $mws_report_id != get_option('amazon_inventory_id')) {
 
     // get inventory from amazon
     $new_mws_inventory = _get_amazon_inventory();
@@ -113,14 +113,14 @@ function woo_mws_do_data_sync() {
       // how much the inventory has changed
       $change = $amazon - $shop;
 
-      if($change != 0) {
+      if ($change != 0) {
         // quantity has changed for this item
         // we assume it's a purchase because we never add stock through amazon
         $debug .= "Discrepancy detected for SKU $sku. Shop qty: $shop, Amazon qty: $amazon, Change: $change\n";
 
         // only accept negative change for purchases
-        if( 0 > $change) {
-          if($product = _woocommerce_get_product_by_sku($sku)) {
+        if ( 0 > $change) {
+          if ($product = _woocommerce_get_product_by_sku($sku)) {
             // update value
             $product->set_stock( $woocommerce_inventory[$sku] + $change );
             $debug .= "Decreased local stock for product $sku by " . (-$change) . "\n";
@@ -140,11 +140,11 @@ function woo_mws_do_data_sync() {
     //$debug .= print_r($new_mws_inventory_changed, true) . "\n";
     //$mws_inventory_changed = $new_mws_inventory;
 
-    if( !empty( $mws_inventory_changed ) ) {
+    if ( !empty( $mws_inventory_changed ) ) {
       // sync the inventories
       $debug .= "Updating Amazon inventory with current Woocommerce state...\n";
       $update = _update_amazon_inventory( $mws_inventory_changed, $debug );
-      if($update) {
+      if ($update) {
         $debug .= print_r($mws_inventory_changed, true) . "\n";
         $debug .= "Update ID: $update";
       }
@@ -172,7 +172,7 @@ function woo_mws_do_data_sync() {
     wp_mail('antti@seravo.fi', 'MWS Integration Debug', $debug);
 
   // kill execution if called from ?do_sync
-  if(isset($_GET['mws_do_sync'])) {
+  if (isset($_GET['mws_do_sync'])) {
     echo "<h1>MWS Integration Debug:</h1><pre>$debug</pre>";
     die();
   }
@@ -185,7 +185,7 @@ function _get_woocommerce_inventory( $skus ) {
 
   foreach ($skus as $sku) {
     $product = _woocommerce_get_product_by_sku( $sku );
-    if( $product ) {
+    if ( $product ) {
       $sku = strval( $sku );
       $inventory = intval( $product->get_stock_quantity() );
       $woocommerce_inventory[$sku] = $inventory;
@@ -208,7 +208,7 @@ function _get_newest_report_id() {
   static $report_id; // this doesn't change during request so we memoize it
 
   // memoize the output of this function
-  if(isset($report_id)) {
+  if (isset($report_id)) {
     return $report_id;
   }
 
@@ -270,14 +270,16 @@ function _get_inventory_from_report( $report_id ) {
 
 function _update_amazon_inventory($inventory) {
 
-  if(empty($inventory))
+  if (empty($inventory))
     return false;
 
   global $service;
 
   $counter = 0;
 
-  ob_start(); ?><?xml version="1.0" encoding="UTF-8"?>
+  ob_start();
+  echo '<'; // Avoid having <?xml in file as it can trigger PHP syntax error
+?>?xml version="1.0" encoding="UTF-8"?>
 <AmazonEnvelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="amzn-envelope.xsd">
   <Header>
     <DocumentVersion>1.01</DocumentVersion>
@@ -344,7 +346,7 @@ function _woocommerce_get_product_by_sku( $sku ) {
 /*
  * Run sync via GET parameters
  */
-if(isset($_GET['mws_do_sync'])) {
+if (isset($_GET['mws_do_sync'])) {
   add_action('init', 'woo_mws_do_data_sync');
 }
 
@@ -388,7 +390,7 @@ function woo_mws_schedule_reports() {
   return $response->isSetManageReportScheduleResult();
 }
 
-if(isset($_GET['mws_schedule'])) {
+if (isset($_GET['mws_schedule'])) {
   echo woo_mws_schedule_reports() ? 'Schedule successful!' : 'Schedule failed. Check your auth credentials.';
   die();
 }
