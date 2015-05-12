@@ -27,7 +27,7 @@ https://developer.amazonservices.com/gp/mws/api.html
 MWS Scratchpad:
 https://mws.amazonservices.com/scratchpad/index.html
 
-Plugin maintained at https://github.com/Seravo/woocommerce-mws
+Plugin maintained at https://github.com/Seravo/woocommerce-mws-sync
 Pull requests welcomed!
 
 == Installation ==
@@ -68,10 +68,12 @@ No screenshots yet.
 
 == Changelog ==
 
+= 1.0.1 =
+Typofixes
+
 = 1.0 =
 Published to private GitHub repo
 
 == Upgrade Notice ==
 
-= 1.0 =
-Please upgrade to the newest version. It won't break anything. Promise!
+-
