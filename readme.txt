@@ -44,7 +44,7 @@ define('MERCHANT_ID', 'XXXXXXXX');
 define('MARKETPLACE_ID', 'XXXXXXXX');
 define('MERCHANT_IDENTIFIER', 'XXXXXXXX');
 // We want the US API
-define('SERVICE_URL' = 'https://mws.amazonservices.com');
+define('SERVICE_URL', 'https://mws.amazonservices.com');
 ```
 
 3. Prepare your products on Amazon Seller Central
