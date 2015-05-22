@@ -169,7 +169,7 @@ function woo_mws_do_data_sync() {
 
   // send debug mail
   if ( defined('DEBUG_EMAIL') && !empty($debug) )
-    wp_mail('antti@seravo.fi', 'MWS Integration Debug', $debug);
+    wp_mail(DEBUG_EMAIL, 'MWS Integration Debug', $debug);
 
   // kill execution if called from ?do_sync
   if (isset($_GET['mws_do_sync'])) {
