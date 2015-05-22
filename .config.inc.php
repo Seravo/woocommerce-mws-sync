@@ -17,10 +17,10 @@ set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__) . '/api
 //define('MERCHANT_IDENTIFIER', 'XXXXXXXX');
 
 // We want the US API
-//define('SERVICE_URL' = 'https://mws.amazonservices.com');
+//define('SERVICE_URL', 'https://mws.amazonservices.com');
 
 // Email to get debug mail
-//define('DEBUG_EMAIL' = 'admin@example.com');
+//define('DEBUG_EMAIL', 'admin@example.com');
 
 $serviceUrl = SERVICE_URL;
 
