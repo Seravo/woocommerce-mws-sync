@@ -1,9 +1,9 @@
 === Woocommerce MWS Sync ===
-Contributors: Zuige, ottok
-Tags: woocommerce, mws, sync, amazon, integration, ecommerce, sku
+Contributors: zuige, ottok
+Tags: woocommerce, mws, sync, amazon, integration, ecommerce, sku, seravo
 Donate link: http://seravo.fi/
 Requires at least: 4.0.1
-Tested up to: 4.2.1
+Tested up to: 4.4.1
 Stable tag: 1.0
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
