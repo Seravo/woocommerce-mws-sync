@@ -1,18 +1,22 @@
 <?php
 /**
  * Plugin Name: WooCommerce MWS sync
+ * Version: 1.0.2
  * Plugin URI: https://github.com/Seravo/woocommerce-mws-sync
  * Description: This plugin syncs product inventories between Woocommerce and Amazon
- * Version: 1.0.1
- * Author: Seravo Oy
- * Author URI: http://seravo.fi
- * License: GPLv3
+ * Author: Seravo
+ * Author URI: https://seravo.com/
+ * License: GPL v3 or later
+ *
+ * WC requires at least: 3.0
+ * WC tested up to: 3.2
+ *
+ * Copyright: © 2015-2018 Seravo Oy
+ * License: GNU General Public License v3.0
+ * License URI: http://www.gnu.org/licenses/gpl-3.0.html
 */
 
-
 /**
- * Copyright 2015-2016 Seravo Oy
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3, as
  * published by the Free Software Foundation.

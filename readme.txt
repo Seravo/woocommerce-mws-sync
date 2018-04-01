@@ -1,25 +1,23 @@
-=== Woocommerce MWS Sync ===
+=== WooCommerce MWS Sync ===
 Contributors: zuige, ottok
 Tags: woocommerce, mws, sync, amazon, integration, ecommerce, sku, seravo
-Donate link: http://seravo.fi/
+Donate link: https://seravo.com/
 Requires at least: 4.0.1
-Tested up to: 4.4.1
-Stable tag: 1.0
-License: GPLv3
+Tested up to: 4.9.4
+Requires PHP: 5.6.0
+Stable tag: trunk
+License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
-This plugin syncronises the inventory between a WooCommerce instance and an
-Amazon seller account using the MWS API.
+This plugin syncronises the inventory between a WooCommerce instance and an Amazon seller account using the MWS API.
 
 == Description ==
 
-This plugin automatically syncronises the inventory between a WooCommerce
-instance and an Amazon seller account using the MWS API.
+This plugin automatically syncronises the inventory between a WooCommerce instance and an Amazon seller account using the MWS API.
 
 Product inventories are syncronised based purely on their SKU values.
 
-Adding inventory from the Amazon store is not currently supported, please
-refill shop inventory via your WooCommerce shop instead.
+Adding inventory from the Amazon store is not currently supported, please refill shop inventory via your WooCommerce shop instead.
 
 API documentation:
 https://developer.amazonservices.com/gp/mws/api.html
